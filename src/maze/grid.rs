@@ -94,6 +94,7 @@ impl Grid {
 
     // Moves player in direction if available
     // TODO MAKE A FUNCTION FOR THE DIRECTIONS, THIS IS ABSURD
+    // Change result to the reward for taking said action
     pub fn move_player(&mut self, direction: char) -> Result<bool, &str> {
 
         match direction {
