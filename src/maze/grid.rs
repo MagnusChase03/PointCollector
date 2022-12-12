@@ -1,4 +1,5 @@
 use std::fmt;
+use rand::Rng;
 
 // Enum to describe what each tile in the maze is
 #[derive(Clone, PartialEq)]
@@ -54,6 +55,7 @@ impl Grid {
         }
         maze.grid[1][1] = Tile::Player;
         maze.grid[10][10] = Tile::Goal;
+        Self::move_goal(&mut maze);
 
         maze
 
@@ -71,6 +73,19 @@ impl Grid {
 
     }
 
+    // Randomly move the goal for after collection
+    fn move_goal(maze: &mut Grid) {
+
+        let mut rng = rand::thread_rng();
+        let x = rng.gen_range(1..10);
+        let y = rng.gen_range(1..10);
+
+        maze.grid[maze.goal.0][maze.goal.1] = Tile::Empty;
+        maze.goal = (x, y);
+        maze.grid[maze.goal.0][maze.goal.1] = Tile::Goal;
+
+    }
+
     // Moves player in direction if available
     pub fn move_player(&mut self, direction: char) -> Result<(), &str> {
 
@@ -78,7 +93,20 @@ impl Grid {
 
             'U' => {
 
-                return Ok(());
+                if self.grid[self.player.0 - 1][self.player.1] == Tile::Empty {
+
+                    self.grid[self.player.0][self.player.1] = Tile::Empty;
+
+                    self.player = (self.player.0 - 1, self.player.1);
+                    self.grid[self.player.0][self.player.1] = Tile::Player;
+                    
+                    return Ok(());
+
+                } else {
+
+                    return Err("Cannot move in that direction.");
+
+                }
 
             },
             'D' => {
@@ -101,12 +129,38 @@ impl Grid {
             },
             'L' => {
 
-                return Ok(());
+                if self.grid[self.player.0][self.player.1 - 1] == Tile::Empty {
+
+                    self.grid[self.player.0][self.player.1] = Tile::Empty;
+
+                    self.player = (self.player.0, self.player.1 - 1);
+                    self.grid[self.player.0][self.player.1] = Tile::Player;
+                    
+                    return Ok(());
+
+                } else {
+
+                    return Err("Cannot move in that direction.");
+
+                }
 
             },
             'R' => {
 
-                return Ok(());
+                if self.grid[self.player.0][self.player.1 + 1] == Tile::Empty {
+
+                    self.grid[self.player.0][self.player.1] = Tile::Empty;
+
+                    self.player = (self.player.0, self.player.1 + 1);
+                    self.grid[self.player.0][self.player.1] = Tile::Player;
+                    
+                    return Ok(());
+
+                } else {
+
+                    return Err("Cannot move in that direction.");
+
+                }
 
             },
             _ => Err("Did not provide a correct direction.")
