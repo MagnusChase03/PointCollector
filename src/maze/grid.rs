@@ -93,7 +93,8 @@ impl Grid {
     }
 
     // Moves player in direction if available
-    pub fn move_player(&mut self, direction: char) -> Result<(), &str> {
+    // TODO MAKE A FUNCTION FOR THE DIRECTIONS, THIS IS ABSURD
+    pub fn move_player(&mut self, direction: char) -> Result<bool, &str> {
 
         match direction {
 
@@ -102,9 +103,11 @@ impl Grid {
                 if self.grid[self.player.0 - 1][self.player.1] == Tile::Empty
                     || self.grid[self.player.0 - 1][self.player.1] == Tile::Goal {
 
+                    let mut collected = false;
                     if self.grid[self.player.0 - 1][self.player.1] == Tile::Goal {
 
                         Self::move_goal(self);
+                        collected = true;
 
                     }
 
@@ -113,7 +116,7 @@ impl Grid {
                     self.player = (self.player.0 - 1, self.player.1);
                     self.grid[self.player.0][self.player.1] = Tile::Player;
                     
-                    return Ok(());
+                    return Ok(collected);
 
                 } else {
 
@@ -127,9 +130,11 @@ impl Grid {
                 if self.grid[self.player.0 + 1][self.player.1] == Tile::Empty 
                     || self.grid[self.player.0 + 1][self.player.1] == Tile::Goal {
 
+                    let mut collected = false;
                     if self.grid[self.player.0 + 1][self.player.1] == Tile::Goal {
 
                         Self::move_goal(self);
+                        collected = true;
 
                     }
 
@@ -138,7 +143,7 @@ impl Grid {
                     self.player = (self.player.0 + 1, self.player.1);
                     self.grid[self.player.0][self.player.1] = Tile::Player;
                     
-                    return Ok(());
+                    return Ok(collected);
 
                 } else {
 
@@ -152,9 +157,11 @@ impl Grid {
                 if self.grid[self.player.0][self.player.1 - 1] == Tile::Empty 
                     || self.grid[self.player.0][self.player.1 - 1] == Tile::Goal {
 
+                    let mut collected = false;
                     if self.grid[self.player.0][self.player.1 - 1] == Tile::Goal {
 
                         Self::move_goal(self);
+                        collected = true;
 
                     }
 
@@ -163,7 +170,7 @@ impl Grid {
                     self.player = (self.player.0, self.player.1 - 1);
                     self.grid[self.player.0][self.player.1] = Tile::Player;
                     
-                    return Ok(());
+                    return Ok(collected);
 
                 } else {
 
@@ -177,9 +184,11 @@ impl Grid {
                 if self.grid[self.player.0][self.player.1 + 1] == Tile::Empty 
                     || self.grid[self.player.0][self.player.1 + 1] == Tile::Goal {
 
+                    let mut collected = false;
                     if self.grid[self.player.0][self.player.1 + 1] == Tile::Goal {
 
                         Self::move_goal(self);
+                        collected = true;
 
                     }
 
@@ -188,7 +197,7 @@ impl Grid {
                     self.player = (self.player.0, self.player.1 + 1);
                     self.grid[self.player.0][self.player.1] = Tile::Player;
                     
-                    return Ok(());
+                    return Ok(collected);
 
                 } else {
 

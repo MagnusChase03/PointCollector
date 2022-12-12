@@ -13,5 +13,7 @@ fn main() {
     maze.print();
 
     let mut network = neuralnetwork::NeuralNetwork::new();
+    let test = network.forward(vec![maze.player.0, maze.player.1, maze.goal.0, maze.goal.1]);
+    println!("{:?}", test);
 
 }
