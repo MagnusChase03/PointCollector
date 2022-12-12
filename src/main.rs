@@ -1,6 +1,8 @@
 mod maze;
+mod agent;
 
 pub use crate::maze::grid;
+pub use crate::agent::neuralnetwork;
 
 fn main() {
     
@@ -9,5 +11,7 @@ fn main() {
 
     maze.move_player('D').unwrap();
     maze.print();
+
+    let mut network = neuralnetwork::NeuralNetwork::new();
 
 }

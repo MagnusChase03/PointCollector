@@ -77,8 +77,14 @@ impl Grid {
     fn move_goal(maze: &mut Grid) {
 
         let mut rng = rand::thread_rng();
-        let x = rng.gen_range(1..10);
-        let y = rng.gen_range(1..10);
+        let mut x = rng.gen_range(1..10);
+        let mut y = rng.gen_range(1..10);
+        while maze.grid[y][x] != Tile::Empty {
+
+            x = rng.gen_range(1..10);
+            y = rng.gen_range(1..10);
+
+        }
 
         maze.grid[maze.goal.0][maze.goal.1] = Tile::Empty;
         maze.goal = (x, y);
@@ -93,7 +99,14 @@ impl Grid {
 
             'U' => {
 
-                if self.grid[self.player.0 - 1][self.player.1] == Tile::Empty {
+                if self.grid[self.player.0 - 1][self.player.1] == Tile::Empty
+                    || self.grid[self.player.0 - 1][self.player.1] == Tile::Goal {
+
+                    if self.grid[self.player.0 - 1][self.player.1] == Tile::Goal {
+
+                        Self::move_goal(self);
+
+                    }
 
                     self.grid[self.player.0][self.player.1] = Tile::Empty;
 
@@ -111,7 +124,14 @@ impl Grid {
             },
             'D' => {
 
-                if self.grid[self.player.0 + 1][self.player.1] == Tile::Empty {
+                if self.grid[self.player.0 + 1][self.player.1] == Tile::Empty 
+                    || self.grid[self.player.0 + 1][self.player.1] == Tile::Goal {
+
+                    if self.grid[self.player.0 + 1][self.player.1] == Tile::Goal {
+
+                        Self::move_goal(self);
+
+                    }
 
                     self.grid[self.player.0][self.player.1] = Tile::Empty;
 
@@ -129,7 +149,14 @@ impl Grid {
             },
             'L' => {
 
-                if self.grid[self.player.0][self.player.1 - 1] == Tile::Empty {
+                if self.grid[self.player.0][self.player.1 - 1] == Tile::Empty 
+                    || self.grid[self.player.0][self.player.1 - 1] == Tile::Goal {
+
+                    if self.grid[self.player.0][self.player.1 - 1] == Tile::Goal {
+
+                        Self::move_goal(self);
+
+                    }
 
                     self.grid[self.player.0][self.player.1] = Tile::Empty;
 
@@ -147,7 +174,14 @@ impl Grid {
             },
             'R' => {
 
-                if self.grid[self.player.0][self.player.1 + 1] == Tile::Empty {
+                if self.grid[self.player.0][self.player.1 + 1] == Tile::Empty 
+                    || self.grid[self.player.0][self.player.1 + 1] == Tile::Goal {
+
+                    if self.grid[self.player.0][self.player.1 + 1] == Tile::Goal {
+
+                        Self::move_goal(self);
+
+                    }
 
                     self.grid[self.player.0][self.player.1] = Tile::Empty;
 
