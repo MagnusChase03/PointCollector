@@ -98,6 +98,16 @@ fn explore(maze: &mut grid::Grid, replay_mem: &mut memory::ReplayMemory) {
 
 }
 
+fn train(network: &mut neuralnetwork::NeuralNetwork, replay_mem: &memory::ReplayMemory) {
+
+    for i in 0..replay_mem.inital_states.len() {
+
+        network.update(&replay_mem.inital_states[i], &replay_mem.final_states[i], replay_mem.directions[i], replay_mem.rewards[i]);
+
+    }
+
+}
+
 fn main() {
     
     let mut maze = grid::Grid::new();
@@ -108,7 +118,7 @@ fn main() {
     
     let mut explore_rate: f64 = 1.0;
     let mut rng = rand::thread_rng();
-    for i in 0..30 {
+    for _i in 0..30 {
 
         let rand_value: f64 = rng.gen();
         
@@ -127,6 +137,8 @@ fn main() {
         // maze.print();
 
     }
+
+    train(&mut network, &replay_mem);
 
     // println!("{:?}", replay_mem);
 

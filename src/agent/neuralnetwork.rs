@@ -93,7 +93,7 @@ impl NeuralNetwork {
 
     }
 
-    pub fn update(&mut self, state: Vec<usize>, direction: char, reward: i64) {
+    pub fn update(&mut self, start_state: &Vec<usize>, end_start: &Vec<usize>, direction: char, reward: i64) {
 
 
 
