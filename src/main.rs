@@ -63,6 +63,41 @@ fn exploit(maze: &mut grid::Grid, network: &neuralnetwork::NeuralNetwork, replay
 
 }
 
+fn explore(maze: &mut grid::Grid, replay_mem: &mut memory::ReplayMemory) {
+
+    let start_state = vec![maze.player.0, maze.player.1, maze.goal.0, maze.goal.1];
+
+    let mut rng = rand::thread_rng();
+    let rand_value: f64 = rng.gen();
+
+    let mut direction: char = 'U';
+    let mut reward: i64 = 0;
+    if rand_value < 0.25 {
+
+        direction = 'U';
+        reward = maze.move_player('U');
+
+    } else if rand_value < 0.5 {
+
+        direction = 'D';
+        reward = maze.move_player('D');
+
+    } else if rand_value < 0.75 {
+
+        direction = 'L';
+        reward = maze.move_player('L');
+
+    } else {
+
+        direction = 'R';
+        reward = maze.move_player('R');
+
+    }
+
+    replay_mem.add_memory(start_state, vec![maze.player.0, maze.player.1, maze.goal.0, maze.goal.1], direction, reward);
+
+}
+
 fn main() {
     
     let mut maze = grid::Grid::new();
@@ -71,10 +106,24 @@ fn main() {
     let mut network = neuralnetwork::NeuralNetwork::new();
     let mut replay_mem = memory::ReplayMemory::new();
     
+    let mut explore_rate: f64 = 1.0;
+    let mut rng = rand::thread_rng();
     for i in 0..30 {
 
-        exploit(&mut maze, &network, &mut replay_mem);
+        let rand_value: f64 = rng.gen();
+        
+        if rand_value < explore_rate {
+
+            explore(&mut maze, &mut replay_mem);
+
+        } else {
+
+            exploit(&mut maze, &network, &mut replay_mem);
+
+        }
     
+        // CHANGE THIS
+        explore_rate = explore_rate * 0.9;
         // maze.print();
 
     }
