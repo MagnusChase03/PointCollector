@@ -3,14 +3,16 @@ mod agent;
 
 pub use crate::maze::grid;
 pub use crate::agent::neuralnetwork;
+pub use crate::agent::memory;
 
 use rand::Rng;
 
 // Exploits the currecnt state using the policy network
-// TODO Clean this up a bit, and change for when move player return a reward
-fn exploit(maze: &mut grid::Grid, network: &neuralnetwork::NeuralNetwork) {
+// TODO Save to replay memory
+fn exploit(maze: &mut grid::Grid, network: &neuralnetwork::NeuralNetwork, replay_mem: &mut memory::ReplayMemory) {
 
-    let guess = network.forward(vec![maze.player.0, maze.player.1, maze.goal.0, maze.goal.1]);
+    let start_state = vec![maze.player.0, maze.player.1, maze.goal.0, maze.goal.1];
+    let guess = network.forward(&start_state);
 
     let mut rng = rand::thread_rng();
     let rand_value: f64 = rng.gen();
@@ -20,51 +22,39 @@ fn exploit(maze: &mut grid::Grid, network: &neuralnetwork::NeuralNetwork) {
         total += guess[i];
         if rand_value < total {
 
+            let mut direction: char = 'U';
+            let mut reward: i64 = 0;
             match i {
 
                 0 => {
 
-                    match maze.move_player('U') {
-
-                        Ok(reward) => (),
-                        Err(e) => println!("{}", e)
-
-                    }
+                    direction = 'U';
+                    reward = maze.move_player('U');
+                    
 
                 },
                 1 => {
 
-                    match maze.move_player('D') {
-
-                        Ok(reward) => (),
-                        Err(e) => println!("{}", e)
-
-                    }
+                    direction = 'D';
+                    reward = maze.move_player('D');
 
                 },
                 2 => {
 
-                    match maze.move_player('L') {
-
-                        Ok(reward) => (),
-                        Err(e) => println!("{}", e)
-
-                    }
+                    direction = 'L';
+                    reward = maze.move_player('L');
 
                 },
                 3 => {
 
-                    match maze.move_player('R') {
-
-                        Ok(reward) => (),
-                        Err(e) => println!("{}", e)
-
-                    }
+                    direction = 'R';
+                    reward = maze.move_player('R');
 
                 },
                 _other => println!("Output was not expected size.")
 
             }
+            replay_mem.add_memory(start_state, vec![maze.player.0, maze.player.1, maze.goal.0, maze.goal.1], direction, reward);
             break;
 
         }
@@ -76,16 +66,19 @@ fn exploit(maze: &mut grid::Grid, network: &neuralnetwork::NeuralNetwork) {
 fn main() {
     
     let mut maze = grid::Grid::new();
-    maze.print();
+    // maze.print();
 
     let mut network = neuralnetwork::NeuralNetwork::new();
+    let mut replay_mem = memory::ReplayMemory::new();
     
-    for i in 0..10 {
+    for i in 0..30 {
 
-        exploit(&mut maze, &network);
+        exploit(&mut maze, &network, &mut replay_mem);
     
-        maze.print();
+        // maze.print();
 
     }
+
+    // println!("{:?}", replay_mem);
 
 }

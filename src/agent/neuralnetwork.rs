@@ -52,7 +52,7 @@ impl NeuralNetwork {
 
     // Forward propagate the currecnt state to predict next action to take
     // TODO Dont hard code loops, maybe change in the future
-    pub fn forward(&self, state: Vec<usize>) -> Vec<f64> {
+    pub fn forward(&self, state: &Vec<usize>) -> Vec<f64> {
 
         let mut hidden_layer: Vec<f64> = vec![0.0;6];
 

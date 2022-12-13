@@ -94,8 +94,7 @@ impl Grid {
 
     // Moves player in direction if available
     // TODO MAKE A FUNCTION FOR THE DIRECTIONS, THIS IS ABSURD
-    // Change result to the reward for taking said action
-    pub fn move_player(&mut self, direction: char) -> Result<bool, &str> {
+    pub fn move_player(&mut self, direction: char) -> i64 {
 
         match direction {
 
@@ -104,11 +103,11 @@ impl Grid {
                 if self.grid[self.player.0 - 1][self.player.1] == Tile::Empty
                     || self.grid[self.player.0 - 1][self.player.1] == Tile::Goal {
 
-                    let mut collected = false;
+                    let mut reward: i64 = -1;
                     if self.grid[self.player.0 - 1][self.player.1] == Tile::Goal {
 
                         Self::move_goal(self);
-                        collected = true;
+                        reward = 10;
 
                     }
 
@@ -117,11 +116,11 @@ impl Grid {
                     self.player = (self.player.0 - 1, self.player.1);
                     self.grid[self.player.0][self.player.1] = Tile::Player;
                     
-                    return Ok(collected);
+                    return reward;
 
                 } else {
 
-                    return Err("Cannot move in that direction.");
+                    return -1;
 
                 }
 
@@ -131,11 +130,11 @@ impl Grid {
                 if self.grid[self.player.0 + 1][self.player.1] == Tile::Empty 
                     || self.grid[self.player.0 + 1][self.player.1] == Tile::Goal {
 
-                    let mut collected = false;
+                    let mut reward: i64 = -1;
                     if self.grid[self.player.0 + 1][self.player.1] == Tile::Goal {
 
                         Self::move_goal(self);
-                        collected = true;
+                        reward = 10;
 
                     }
 
@@ -144,11 +143,11 @@ impl Grid {
                     self.player = (self.player.0 + 1, self.player.1);
                     self.grid[self.player.0][self.player.1] = Tile::Player;
                     
-                    return Ok(collected);
+                    return reward;
 
                 } else {
 
-                    return Err("Cannot move in that direction.");
+                    return -1;
 
                 }
 
@@ -158,11 +157,11 @@ impl Grid {
                 if self.grid[self.player.0][self.player.1 - 1] == Tile::Empty 
                     || self.grid[self.player.0][self.player.1 - 1] == Tile::Goal {
 
-                    let mut collected = false;
+                    let mut reward: i64 = -1;
                     if self.grid[self.player.0][self.player.1 - 1] == Tile::Goal {
 
                         Self::move_goal(self);
-                        collected = true;
+                        reward = 10;
 
                     }
 
@@ -171,11 +170,11 @@ impl Grid {
                     self.player = (self.player.0, self.player.1 - 1);
                     self.grid[self.player.0][self.player.1] = Tile::Player;
                     
-                    return Ok(collected);
+                    return reward;
 
                 } else {
 
-                    return Err("Cannot move in that direction.");
+                    return -1;
 
                 }
 
@@ -185,11 +184,11 @@ impl Grid {
                 if self.grid[self.player.0][self.player.1 + 1] == Tile::Empty 
                     || self.grid[self.player.0][self.player.1 + 1] == Tile::Goal {
 
-                    let mut collected = false;
+                    let mut reward: i64 = -1;
                     if self.grid[self.player.0][self.player.1 + 1] == Tile::Goal {
 
                         Self::move_goal(self);
-                        collected = true;
+                        reward = 10;
 
                     }
 
@@ -198,16 +197,21 @@ impl Grid {
                     self.player = (self.player.0, self.player.1 + 1);
                     self.grid[self.player.0][self.player.1] = Tile::Player;
                     
-                    return Ok(collected);
+                    return reward;
 
                 } else {
 
-                    return Err("Cannot move in that direction.");
+                    return -1;
 
                 }
 
             },
-            _ => Err("Did not provide a correct direction.")
+            _other => {
+
+                println!("Invalid direction");
+                return 0;
+
+            }
 
         }
 
