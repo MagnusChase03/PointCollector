@@ -82,7 +82,7 @@ impl Policy {
 
     }
 
-    fn forward_single(&self, layer: i64, to: usize) -> f64 {
+    fn forward_single(&self, layer: i64, to: usize) -> Result<f64, &'static str> {
 
         let mut total: f64 = 0.0;
         match layer {
@@ -95,7 +95,7 @@ impl Policy {
 
                 }
 
-                return total;
+                return Ok(total);
 
             },
             1 => {
@@ -106,7 +106,7 @@ impl Policy {
 
                 }
 
-                return total;
+                return Ok(total);
 
             },
             2 => {
@@ -117,13 +117,12 @@ impl Policy {
 
                 }
 
-                return total;
+                return Ok(total);
 
             },
             _ => {
                
-                println!("Invalid layer to forward.");
-                return total;
+                return Err("Invalid layer to forward.");
                 
             }
 
@@ -148,7 +147,7 @@ impl Policy {
 
             // }
 
-            self.hidden[0][node] = Self::sigmoid(Self::forward_single(self, 0, node));
+            self.hidden[0][node] = Self::sigmoid(Self::forward_single(self, 0, node).unwrap());
 
         }
 
@@ -161,7 +160,7 @@ impl Policy {
 
             // }
 
-            self.hidden[1][node] = Self::sigmoid(Self::forward_single(self, 1, node));
+            self.hidden[1][node] = Self::sigmoid(Self::forward_single(self, 1, node).unwrap());
 
         }
 
@@ -175,7 +174,7 @@ impl Policy {
 
             // }
 
-            let total: f64 = Self::forward_single(self, 2, output);
+            let total: f64 = Self::forward_single(self, 2, output).unwrap();
             self.outputs[output] = total;
             output_total += total;
 
@@ -240,12 +239,14 @@ impl Policy {
         }
 
         println!("Error is {}", error);
-        for node in 0..self.hidden[1].len() {
 
-            let change: f64 = (2.0 * error * self.hidden[1][node] * Self::sigmoid_d(Self::forward_single(self, 2, output_node)) * self.learning_rate) 
+        let derivatives: f64 = (2.0 * error * Self::sigmoid_d(Self::forward_single(self, 2, output_node).unwrap()) * self.learning_rate) 
                 / self.output_total;
 
-            self.weights[2][node][output_node] -= change;
+        self.biases[2][output_node] -= derivatives;
+        for node in 0..self.hidden[1].len() {
+
+            self.weights[2][node][output_node] -= derivatives * self.hidden[1][node];
 
         }
 
