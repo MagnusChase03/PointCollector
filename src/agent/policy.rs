@@ -141,40 +141,41 @@ impl Policy {
 
         for node in 0..self.hidden[0].len() {
 
-            let mut total: f64 = 0.0;
-            for num in 0..self.inputs.len() {
+            // let mut total: f64 = 0.0;
+            // for num in 0..self.inputs.len() {
 
-                total += self.inputs[num] * self.weights[0][num][node] + self.biases[0][node];
+            //     total += self.inputs[num] * self.weights[0][num][node] + self.biases[0][node];
 
-            }
+            // }
 
-            self.hidden[0][node] = Self::sigmoid(total);
+            self.hidden[0][node] = Self::sigmoid(Self::forward_single(self, 0, node));
 
         }
 
-        for node2 in 0..self.hidden[1].len() {
+        for node in 0..self.hidden[1].len() {
 
-            let mut total: f64 = 0.0;
-            for node in 0..self.hidden[0].len() {
+            // let mut total: f64 = 0.0;
+            // for node in 0..self.hidden[0].len() {
 
-                total += self.hidden[0][node] * self.weights[1][node][node2] + self.biases[1][node2];
+            //     total += self.hidden[0][node] * self.weights[1][node][node2] + self.biases[1][node2];
 
-            }
+            // }
 
-            self.hidden[1][node2] = Self::sigmoid(total);
+            self.hidden[1][node] = Self::sigmoid(Self::forward_single(self, 1, node));
 
         }
 
         let mut output_total: f64 = 0.0;
         for output in 0..self.outputs.len() {
 
-            let mut total: f64 = 0.0;
-            for node in 0..self.hidden[1].len() {
+            // let mut total: f64 = 0.0;
+            // for node in 0..self.hidden[1].len() {
 
-                total += self.hidden[1][node] * self.weights[2][node][output] + self.biases[2][output];
+            //     total += self.hidden[1][node] * self.weights[2][node][output] + self.biases[2][output];
 
-            }
+            // }
 
+            let total: f64 = Self::forward_single(self, 2, output);
             self.outputs[output] = total;
             output_total += total;
 
