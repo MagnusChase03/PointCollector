@@ -1,2 +1,1 @@
-pub mod neuralnetwork;
-pub mod memory;
+pub mod policy;
