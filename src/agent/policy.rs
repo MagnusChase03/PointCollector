@@ -250,15 +250,61 @@ impl Policy {
 
         }
 
+        // for node in 0..self.hidden[1].len() {
+
+        //     let node_error = derivatives * self.weights[2][node][output_node] 
+        //         * Self::sigmoid_d(Self::forward_single(self, 1, node).unwrap());
+
+        //     self.biases[1][node] -= node_error;
+        //     for prev_node in 0..self.hidden[0].len() {
+
+        //         self.weights[1][prev_node][node] -= node_error * self.hidden[0][prev_node];
+
+        //     }
+
+        // }
+
+        let mut hidden1_error: Vec<f64> = vec![0.0; self.hidden[1].len()];
         for node in 0..self.hidden[1].len() {
 
-            let node_error = derivatives * self.weights[2][node][output_node] 
+            hidden1_error[node] = derivatives * self.weights[2][node][output_node] 
                 * Self::sigmoid_d(Self::forward_single(self, 1, node).unwrap());
 
-            self.biases[1][node] -= node_error;
+            self.biases[1][node] -= hidden1_error[node];
             for prev_node in 0..self.hidden[0].len() {
 
-                self.weights[1][prev_node][node] -= node_error * self.hidden[0][prev_node];
+                self.weights[1][prev_node][node] -= hidden1_error[node] * self.hidden[0][prev_node];
+
+            }
+
+        }
+
+        // for node in 0..self.hidden[0].len() {
+
+        //     for node2 in 0..self.hidden[1].len() {
+
+        //         self.weights[1][node][node2] -= hidden1_error[node] * self.hidden[0][node];
+
+        //     }
+
+        // }
+
+        for node in 0..self.hidden[0].len() {
+
+            // hidden0_error[node] = derivatives * self.weights[2][node][output_node] 
+            //     * Self::sigmoid_d(Self::forward_single(self, 1, node).unwrap());
+
+            for next_node in 0..self.hidden[1].len() {
+
+                let node_error: f64 = hidden1_error[next_node] * self.weights[1][node][next_node]
+                    * Self::sigmoid_d(Self::forward_single(self, 0, node).unwrap());
+
+                self.biases[0][node] -= node_error;
+                for inp in 0..self.inputs.len() {
+
+                    self.weights[0][inp][node] -= node_error * self.inputs[inp];
+
+                }
 
             }
 
