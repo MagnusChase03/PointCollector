@@ -250,6 +250,20 @@ impl Policy {
 
         }
 
+        for node in 0..self.hidden[1].len() {
+
+            let node_error = derivatives * self.weights[2][node][output_node] 
+                * Self::sigmoid_d(Self::forward_single(self, 1, node).unwrap());
+
+            self.biases[1][node] -= node_error;
+            for prev_node in 0..self.hidden[0].len() {
+
+                self.weights[1][prev_node][node] -= node_error * self.hidden[0][prev_node];
+
+            }
+
+        }
+
         Ok(())
         
 
