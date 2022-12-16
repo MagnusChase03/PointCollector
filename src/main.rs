@@ -32,7 +32,7 @@ fn do_move(policy: &mut p::Policy, replay: &mut memory::Memory, game: &mut maze:
 
 }
 
-fn make_move(policy: &mut p::Policy, replay: &mut memory::Memory, game: &mut maze::Maze) -> Result<(), &'static str> {
+fn make_move(policy: &mut p::Policy, replay: &mut memory::Memory, game: &mut maze::Maze, explore: bool) -> Result<(), &'static str> {
 
     let inputs = vec![game.player_x as f64, game.player_y as f64, 
                     game.goal_x as f64, game.goal_y as f64];
@@ -43,9 +43,20 @@ fn make_move(policy: &mut p::Policy, replay: &mut memory::Memory, game: &mut maz
     let mut rng = rand::thread_rng();
     let num: f64 = rng.gen();
     let mut total: f64 = 0.0;
+    let chance: f64 = 1.0 / policy.outputs.len() as f64;
+
     for output in 0..policy.outputs.len() {
 
-        total += policy.outputs[output];
+        if explore {
+
+            total += chance;
+
+        } else {
+
+            total += policy.outputs[output];
+
+        }
+        
         if num <= total {
 
             match output {
@@ -63,7 +74,7 @@ fn make_move(policy: &mut p::Policy, replay: &mut memory::Memory, game: &mut maz
     }
 
     Err("Incorrect number of outputs.")
-
+    
 }
 
 fn main() {
@@ -85,7 +96,7 @@ fn main() {
     let mut game = maze::Maze::new(10, 10);
     game.add_walls();
 
-    make_move(&mut policy, &mut replay, &mut game);
+    make_move(&mut policy, &mut replay, &mut game, true);
     game.print();
     
     // for i in 0..30 {
