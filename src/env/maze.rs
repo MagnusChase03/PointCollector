@@ -1,10 +1,29 @@
-#[derive(Debug, Clone, PartialEq)]
+use std::fmt;
+
+#[derive(Clone, PartialEq)]
 pub enum Tile {
 
     Empty,
     Wall,
     Player,
     Goal
+
+}
+
+impl fmt::Debug for Tile {
+
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+
+        match self {
+
+            Tile::Empty => write!(f, " "),
+            Tile::Wall => write!(f, "#"),
+            Tile::Player => write!(f, "P"),
+            Tile::Goal => write!(f, "G"),
+
+        }
+
+    }
 
 }
 
@@ -62,11 +81,11 @@ impl Maze {
 
         if x < 0 || y < 0 {
 
-            if self.board[self.player_y - (y as usize)][self.player_x - (x as usize)] == Tile::Empty {
+            if self.board[self.player_y - (y.abs() as usize)][self.player_x - (x.abs() as usize)] == Tile::Empty {
 
                 self.board[self.player_y][self.player_x] = Tile::Empty;
-                self.player_y -= y as usize;
-                self.player_x -= x as usize;
+                self.player_y -= y.abs() as usize;
+                self.player_x -= x.abs() as usize;
                 self.board[self.player_y][self.player_x] = Tile::Player;
 
                 return Ok(());
