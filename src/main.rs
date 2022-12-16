@@ -2,12 +2,37 @@ mod agent;
 mod env;
 
 use agent::policy as p;
+use agent::memory;
 use env::maze;
 
 use std::thread;
 use rand::Rng;
 
-fn make_move(policy: &mut p::Policy, game: &mut maze::Maze) -> Result<(), &'static str> {
+fn do_move(policy: &mut p::Policy, replay: &mut memory::Memory, game: &mut maze::Maze, direction: char) -> Result<(), &'static str> {
+
+    let start_state: Vec<f64> = vec![game.player_x as f64, game.player_y as f64, 
+                                    game.goal_x as f64, game.goal_y as f64];
+
+    match game.move_player(direction) {
+
+        Ok(reward) => {
+
+            replay.add(start_state,
+                direction,
+                reward);
+
+            return Ok(());
+
+        },
+        Err(e) => Err::<(), &str>(e)
+
+    };
+
+    Ok(())
+
+}
+
+fn make_move(policy: &mut p::Policy, replay: &mut memory::Memory, game: &mut maze::Maze) -> Result<(), &'static str> {
 
     let inputs = vec![game.player_x as f64, game.player_y as f64, 
                     game.goal_x as f64, game.goal_y as f64];
@@ -25,11 +50,11 @@ fn make_move(policy: &mut p::Policy, game: &mut maze::Maze) -> Result<(), &'stat
 
             match output {
 
-                0 => game.move_player('u'),
-                1 => game.move_player('d'),
-                2 => game.move_player('l'),
-                3 => game.move_player('r'),
-                _other => Err("Incorrect number of outputs.")
+                0 => return do_move(policy, replay, game, 'u'),
+                1 => return do_move(policy, replay, game, 'd'),
+                2 => return do_move(policy, replay, game, 'l'),
+                3 => return do_move(policy, replay, game, 'r'),
+                _other => Err::<(), &str>("Incorrect number of outputs.")
 
             };
 
@@ -46,6 +71,8 @@ fn main() {
     let mut policy = p::Policy::new(4, 4, 6);
     policy.randomize_weights();
 
+    let mut replay = memory::Memory::new();
+
     // let test_inputs = vec![1.0, 2.0, 3.0, 4.0];
     // policy.forward(&test_inputs);
 
@@ -57,15 +84,16 @@ fn main() {
 
     let mut game = maze::Maze::new(10, 10);
     game.add_walls();
+
+    make_move(&mut policy, &mut replay, &mut game);
     game.print();
     
-    for i in 0..30 {
+    // for i in 0..30 {
         
-        thread::sleep_ms(500);
-        make_move(&mut policy, &mut game);
-        game.print();
+    //     thread::sleep_ms(500);
+    //     game.print();
 
-    }
+    // }
 
     // println!("{:?}",policy);
 

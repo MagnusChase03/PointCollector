@@ -77,7 +77,7 @@ impl Maze {
 
     }
 
-    fn move_player_dir(&mut self, x: i8, y: i8) -> Result<(), &'static str> {
+    fn move_player_dir(&mut self, x: i8, y: i8) -> Result<f64, &'static str> {
 
         if x < 0 || y < 0 {
 
@@ -88,7 +88,7 @@ impl Maze {
                 self.player_x -= x.abs() as usize;
                 self.board[self.player_y][self.player_x] = Tile::Player;
 
-                return Ok(());
+                return Ok(-1.0);
             } 
 
             return Err("Player cannot move there");
@@ -102,7 +102,7 @@ impl Maze {
                 self.player_x += x as usize;
                 self.board[self.player_y][self.player_x] = Tile::Player;
 
-                return Ok(());
+                return Ok(-1.0);
             } 
 
             return Err("Player cannot move there");
@@ -113,7 +113,7 @@ impl Maze {
 
     }
 
-    pub fn move_player(&mut self, direction: char) -> Result<(), &'static str> {
+    pub fn move_player(&mut self, direction: char) -> Result<f64, &'static str> {
 
         match direction {
 
@@ -137,7 +137,7 @@ impl Maze {
                 return Self::move_player_dir(self, 1, 0);
 
             },
-            _other => Err::<(), &'static str>("Invalid direction")
+            _other => Err::<f64, &'static str>("Invalid direction")
 
         }
 
