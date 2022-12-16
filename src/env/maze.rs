@@ -1,4 +1,6 @@
 use std::fmt;
+use rand::Rng;
+use std::thread;
 
 #[derive(Clone, PartialEq)]
 pub enum Tile {
@@ -77,32 +79,70 @@ impl Maze {
 
     }
 
+    fn move_goal(&mut self) {
+
+        let mut rng = rand::thread_rng();
+        let mut x: usize = rng.gen_range(1..(self.x_size - 2));
+        let mut y: usize = rng.gen_range(1..(self.y_size - 2));
+
+        while (!(self.board[y][x] == Tile::Empty)) {
+
+            x = rng.gen_range(1..self.x_size - 2);
+            y = rng.gen_range(1..self.y_size - 2);
+
+        }
+
+        self.board[self.goal_y][self.goal_x] = Tile::Empty;
+        self.goal_x = x;
+        self.goal_y = y;
+        self.board[self.goal_y][self.goal_x] = Tile::Goal;
+
+    }
+
     fn move_player_dir(&mut self, x: i8, y: i8) -> Result<f64, &'static str> {
 
+        let mut reward: f64 = -1.0;
         if x < 0 || y < 0 {
 
-            if self.board[self.player_y - (y.abs() as usize)][self.player_x - (x.abs() as usize)] == Tile::Empty {
+            if self.board[self.player_y - (y.abs() as usize)][self.player_x - (x.abs() as usize)] == Tile::Empty 
+                || self.board[self.player_y - (y.abs() as usize)][self.player_x - (x.abs() as usize)] == Tile::Goal {
+
+                if self.board[self.player_y - (y.abs() as usize)][self.player_x - (x.abs() as usize)] == Tile::Goal {
+
+                    Self::move_goal(self);
+                    reward = 10.0;
+
+                }
 
                 self.board[self.player_y][self.player_x] = Tile::Empty;
                 self.player_y -= y.abs() as usize;
                 self.player_x -= x.abs() as usize;
                 self.board[self.player_y][self.player_x] = Tile::Player;
 
-                return Ok(-1.0);
+                return Ok(reward);
             } 
 
             return Err("Player cannot move there");
 
         } else if x > 0 || y > 0 {
 
-            if self.board[self.player_y + (y as usize)][self.player_x + (x as usize)] == Tile::Empty {
+            if self.board[self.player_y + (y as usize)][self.player_x + (x as usize)] == Tile::Empty
+                || self.board[self.player_y + (y as usize)][self.player_x + (x as usize)] == Tile::Goal {
+
+
+                if self.board[self.player_y + (y as usize)][self.player_x + (x as usize)] == Tile::Goal {
+
+                    Self::move_goal(self);
+                    reward = 10.0;
+
+                }
 
                 self.board[self.player_y][self.player_x] = Tile::Empty;
                 self.player_y += y as usize;
                 self.player_x += x as usize;
                 self.board[self.player_y][self.player_x] = Tile::Player;
 
-                return Ok(-1.0);
+                return Ok(reward);
             } 
 
             return Err("Player cannot move there");

@@ -77,12 +77,36 @@ fn make_move(policy: &mut p::Policy, replay: &mut memory::Memory, game: &mut maz
     
 }
 
+fn train(policy: &mut p::Policy, replay: &agent::memory::Memory) {
+
+    let mut value: f64 = 0.0;
+    for mem in 0..replay.start_states.len() {
+
+        let index: usize = replay.start_states.len() - mem - 1;
+        if replay.rewards[index] > 0.0 {
+
+            value = replay.rewards[index];
+
+        } else {
+
+            value += replay.rewards[index];
+
+        }
+
+        policy.backpropagate(&replay.start_states[index], value, replay.actions[index]);
+
+    }
+
+}
+
 fn main() {
+
+    let mut rng = rand::thread_rng();
 
     let mut policy = p::Policy::new(4, 4, 6);
     policy.randomize_weights();
 
-    let mut replay = memory::Memory::new();
+    let mut explore_rate: f64 = 1.0;
 
     // let test_inputs = vec![1.0, 2.0, 3.0, 4.0];
     // policy.forward(&test_inputs);
@@ -93,18 +117,58 @@ fn main() {
 
     // }
 
+    
+    
+    for game_num in 0..10000 {
+        
+        println!("Game {}", game_num);
+        let mut game = maze::Maze::new(10, 10);
+        game.add_walls();
+        // game.print();
+
+        let mut replay = memory::Memory::new();
+
+        for _round in 0..60 {
+        
+
+            let num: f64 = rng.gen();
+            if num < explore_rate {
+
+                make_move(&mut policy, &mut replay, &mut game, true);
+
+            } else {
+
+                make_move(&mut policy, &mut replay, &mut game, false);
+
+            }
+
+            // game.print();
+
+        }
+
+        train(&mut policy, &replay);
+        if game_num % 100 == 0 && explore_rate > 0.2 {
+
+            explore_rate -= 0.016;
+
+        }
+
+    }
+
     let mut game = maze::Maze::new(10, 10);
     game.add_walls();
-
-    make_move(&mut policy, &mut replay, &mut game, true);
     game.print();
-    
-    // for i in 0..30 {
-        
-    //     thread::sleep_ms(500);
-    //     game.print();
 
-    // }
+    let mut replay = memory::Memory::new();
+
+    for _round in 0..60 {
+    
+        thread::sleep_ms(200);
+        make_move(&mut policy, &mut replay, &mut game, false);
+
+        game.print();
+
+    }
 
     // println!("{:?}",policy);
 

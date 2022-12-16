@@ -238,7 +238,7 @@ impl Policy {
 
         }
 
-        println!("Error is {}", error);
+        error = error * reward;
 
         let derivatives: f64 = (2.0 * error * Self::sigmoid_d(Self::forward_single(self, 2, output_node).unwrap()) * self.learning_rate) 
                 / self.output_total;
