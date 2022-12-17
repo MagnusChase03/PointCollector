@@ -110,7 +110,8 @@ impl Maze {
                 if self.board[self.player_y - (y.abs() as usize)][self.player_x - (x.abs() as usize)] == Tile::Goal {
 
                     Self::move_goal(self);
-                    reward = 60.0;
+                    println!("Goal!");
+                    reward = 120.0;
 
                 }
 
@@ -133,7 +134,8 @@ impl Maze {
                 if self.board[self.player_y + (y as usize)][self.player_x + (x as usize)] == Tile::Goal {
 
                     Self::move_goal(self);
-                    reward = 60.0;
+                    println!("Goal!");
+                    reward = 120.0;
 
                 }
 
