@@ -6,6 +6,7 @@ use agent::memory;
 use env::maze;
 
 use std::thread;
+use std::io::Write;
 use rand::Rng;
 
 fn do_move(policy: &mut p::Policy, replay: &mut memory::Memory, game: &mut maze::Maze, direction: char) -> Result<(), &'static str> {
@@ -89,7 +90,7 @@ fn train(policy: &mut p::Policy, replay: &agent::memory::Memory) {
 
         } else {
 
-            value += replay.rewards[index];
+            value += replay.rewards[index] + (0.75 * value);
 
         }
 
@@ -118,8 +119,8 @@ fn main() {
     // }
 
     
-    
-    for game_num in 0..10000 {
+    let games_to_play: i64 = 5000;
+    for game_num in 0..games_to_play {
         
         println!("Game {}", game_num);
         let mut game = maze::Maze::new(10, 10);
@@ -147,9 +148,9 @@ fn main() {
         }
 
         train(&mut policy, &replay);
-        if game_num % 100 == 0 && explore_rate > 0.2 {
+        if game_num % 100 == 0 {
 
-            explore_rate -= 0.016;
+            explore_rate -= 0.8 / (games_to_play as f64 / 100.0);
 
         }
 
@@ -163,10 +164,25 @@ fn main() {
 
     for _round in 0..60 {
     
-        thread::sleep_ms(200);
+        thread::sleep_ms(20);
         make_move(&mut policy, &mut replay, &mut game, false);
 
         game.print();
+
+    }
+
+    let mut file = std::fs::File::create("data.dat").unwrap();
+    for layer in 0..policy.weights.len() {
+
+        for node in 0..policy.weights[layer].len() {
+
+            for weight in 0..policy.weights[layer][node].len() {
+
+                file.write_all(format!("{}\n", policy.weights[layer][node][weight].to_string()).as_bytes()).unwrap();
+
+            }   
+
+        }   
 
     }
 
