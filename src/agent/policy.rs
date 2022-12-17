@@ -1,4 +1,6 @@
 use rand::Rng;
+use std::io::Write;
+use std::io::Read;
 
 #[derive(Debug)]
 pub struct Policy {
@@ -58,6 +60,53 @@ impl Policy {
                 }
 
             }
+
+        }
+
+    }
+    
+    pub fn save_weights(&self) {
+
+        let mut file = std::fs::File::create("data.dat").unwrap();
+        for layer in 0..self.weights.len() {
+
+            for node in 0..self.weights[layer].len() {
+
+                for weight in 0..self.weights[layer][node].len() {
+
+                    file.write_all(format!("{}\n", self.weights[layer][node][weight].to_string()).as_bytes()).unwrap();
+
+                }   
+
+            }   
+
+        }
+
+    }
+
+    pub fn load_weights(&mut self, filepath: &str) {
+
+        let mut file = std::fs::File::open(filepath).unwrap();
+        let mut contents = String::new();
+        file.read_to_string(&mut contents).unwrap();
+
+        let split = contents.split("\n");
+        let weights: Vec<&str> = split.collect();
+
+        let mut num: usize = 0;
+        for layer in 0..self.weights.len() {
+
+            for node in 0..self.weights[layer].len() {
+
+                for weight in 0..self.weights[layer][node].len() {
+
+                    //file.write_all(format!("{}\n", self.weights[layer][node][weight].to_string()).as_bytes()).unwrap();
+                    self.weights[layer][node][weight] = weights[num].parse::<f64>().unwrap();
+                    num += 1;
+
+                }   
+
+            }   
 
         }
 

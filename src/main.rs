@@ -6,15 +6,14 @@ use agent::memory;
 use env::maze;
 
 use std::thread;
-use std::io::Write;
 use rand::Rng;
 
-fn do_move(policy: &mut p::Policy, replay: &mut memory::Memory, game: &mut maze::Maze, direction: char) -> Result<(), &'static str> {
+fn do_move(policy: &mut p::Policy, replay: &mut memory::Memory, game: &mut maze::Maze, direction: char, num_of_rounds: i64) -> Result<(), &'static str> {
 
     let start_state: Vec<f64> = vec![game.player_x as f64, game.player_y as f64, 
                                     game.goal_x as f64, game.goal_y as f64];
 
-    match game.move_player(direction) {
+    match game.move_player(direction, num_of_rounds) {
 
         Ok(reward) => {
 
@@ -33,7 +32,7 @@ fn do_move(policy: &mut p::Policy, replay: &mut memory::Memory, game: &mut maze:
 
 }
 
-fn make_move(policy: &mut p::Policy, replay: &mut memory::Memory, game: &mut maze::Maze, explore: bool) -> Result<(), &'static str> {
+fn make_move(policy: &mut p::Policy, replay: &mut memory::Memory, game: &mut maze::Maze, explore: bool, num_of_rounds: i64) -> Result<(), &'static str> {
 
     let inputs = vec![game.player_x as f64, game.player_y as f64, 
                     game.goal_x as f64, game.goal_y as f64];
@@ -62,10 +61,10 @@ fn make_move(policy: &mut p::Policy, replay: &mut memory::Memory, game: &mut maz
 
             match output {
 
-                0 => return do_move(policy, replay, game, 'u'),
-                1 => return do_move(policy, replay, game, 'd'),
-                2 => return do_move(policy, replay, game, 'l'),
-                3 => return do_move(policy, replay, game, 'r'),
+                0 => return do_move(policy, replay, game, 'u', num_of_rounds),
+                1 => return do_move(policy, replay, game, 'd', num_of_rounds),
+                2 => return do_move(policy, replay, game, 'l', num_of_rounds),
+                3 => return do_move(policy, replay, game, 'r', num_of_rounds),
                 _other => Err::<(), &str>("Incorrect number of outputs.")
 
             };
@@ -106,6 +105,7 @@ fn main() {
 
     let mut policy = p::Policy::new(4, 4, 6);
     policy.randomize_weights();
+    // policy.load_weights("data20g120r4.dat");
 
     let mut explore_rate: f64 = 1.0;
 
@@ -119,7 +119,8 @@ fn main() {
     // }
 
     
-    let games_to_play: i64 = 50;
+    let games_to_play: i64 = 2000;
+    let num_of_rounds: i64 = 60;
     for game_num in 0..games_to_play {
         
         println!("Game {}", game_num);
@@ -129,17 +130,17 @@ fn main() {
 
         let mut replay = memory::Memory::new();
 
-        for _round in 0..120 {
+        for _round in 0..num_of_rounds {
         
 
             let num: f64 = rng.gen();
             if num < explore_rate {
 
-                make_move(&mut policy, &mut replay, &mut game, true);
+                make_move(&mut policy, &mut replay, &mut game, true, num_of_rounds);
 
             } else {
 
-                make_move(&mut policy, &mut replay, &mut game, false);
+                make_move(&mut policy, &mut replay, &mut game, false, num_of_rounds);
 
             }
 
@@ -148,9 +149,9 @@ fn main() {
         }
 
         train(&mut policy, &replay);
-        if game_num % 100 == 0 {
+        if game_num % 10 == 0 {
 
-            explore_rate -= 0.4 / (games_to_play as f64 / 100.0);
+            explore_rate -= 0.8 / (games_to_play as f64 / 10.0);
 
         }
 
@@ -162,29 +163,16 @@ fn main() {
 
     let mut replay = memory::Memory::new();
 
-    for _round in 0..60 {
+    for _round in 0..num_of_rounds {
     
         thread::sleep_ms(10);
-        make_move(&mut policy, &mut replay, &mut game, false);
+        make_move(&mut policy, &mut replay, &mut game, false, num_of_rounds);
 
         game.print();
 
     }
 
-    let mut file = std::fs::File::create("data.dat").unwrap();
-    for layer in 0..policy.weights.len() {
-
-        for node in 0..policy.weights[layer].len() {
-
-            for weight in 0..policy.weights[layer][node].len() {
-
-                file.write_all(format!("{}\n", policy.weights[layer][node][weight].to_string()).as_bytes()).unwrap();
-
-            }   
-
-        }   
-
-    }
+    policy.save_weights();
 
     // println!("{:?}",policy);
 
