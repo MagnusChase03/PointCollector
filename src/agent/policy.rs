@@ -82,6 +82,16 @@ impl Policy {
 
         }
 
+        for layer in 0..self.biases.len() {
+
+            for node in 0..self.biases[layer].len() {
+
+                file.write_all(format!("{}\n", self.biases[layer][node].to_string()).as_bytes()).unwrap();
+
+            }
+
+        }
+
     }
 
     pub fn load_weights(&mut self, filepath: &str) {
@@ -107,6 +117,17 @@ impl Policy {
                 }   
 
             }   
+
+        }
+
+        for layer in 0..self.biases.len() {
+
+            for node in 0..self.biases[layer].len() {
+
+                self.biases[layer][node] = weights[num].parse::<f64>().unwrap();
+                num += 1;
+
+            }
 
         }
 
@@ -252,7 +273,7 @@ impl Policy {
 
     }
 
-    pub fn backpropagate(&mut self, inputs: &Vec<f64>, reward: f64, action: char) -> Result<(), &'static str> {
+    pub fn backpropagate(&mut self, inputs: &Vec<f64>, reward: f64, action: char, chance: f64) -> Result<(), &'static str> {
 
         if reward == 0.0 {
 
@@ -274,28 +295,29 @@ impl Policy {
 
         }
 
-        self.forward(inputs);
+        // self.forward(inputs);
 
         let mut error: f64 = 0.0;
         if reward > 0.0 {
 
-            error = self.outputs[output_node] - 1.0;
+            error = chance - 1.0;
 
         } else {
 
-            error = self.outputs[output_node];
+            error = chance;
 
         }
 
-        error = error * reward;
+        error = error * reward.abs();
 
-        let derivatives: f64 = (2.0 * error * Self::sigmoid_d(Self::forward_single(self, 2, output_node).unwrap()) * self.learning_rate) 
+        let derivatives: f64 = (2.0 * error * self.learning_rate) 
                 / self.output_total;
 
         self.biases[2][output_node] -= derivatives;
         for node in 0..self.hidden[1].len() {
 
             self.weights[2][node][output_node] -= derivatives * self.hidden[1][node];
+            // println!("Change by {} with {}, {}. and {}", derivatives * self.hidden[1][node], derivatives, self.hidden[1][node], reward);
 
         }
 

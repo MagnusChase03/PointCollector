@@ -99,9 +99,9 @@ impl Maze {
 
     }
 
-    fn move_player_dir(&mut self, x: i8, y: i8, num_of_rounds: i64) -> Result<f64, &'static str> {
+    fn move_player_dir(&mut self, x: i8, y: i8) -> Result<f64, &'static str> {
 
-        let mut reward: f64 = -1.0;
+        let mut reward: f64 = 0.0;
         if x < 0 || y < 0 {
 
             if self.board[self.player_y - (y.abs() as usize)][self.player_x - (x.abs() as usize)] == Tile::Empty 
@@ -111,7 +111,7 @@ impl Maze {
 
                     Self::move_goal(self);
                     println!("Goal!");
-                    reward = num_of_rounds as f64;
+                    reward = 10.0;
 
                 }
 
@@ -123,7 +123,7 @@ impl Maze {
                 return Ok(reward);
             } 
 
-            return Ok(reward);
+            return Ok(-1.0);
 
         } else if x > 0 || y > 0 {
 
@@ -135,7 +135,7 @@ impl Maze {
 
                     Self::move_goal(self);
                     println!("Goal!");
-                    reward = num_of_rounds as f64;
+                    reward = 10.0;
 
                 }
 
@@ -147,7 +147,7 @@ impl Maze {
                 return Ok(reward);
             } 
 
-            return Ok(reward);
+            return Ok(-1.0);
 
         }
 
@@ -155,28 +155,28 @@ impl Maze {
 
     }
 
-    pub fn move_player(&mut self, direction: char, num_of_rounds: i64) -> Result<f64, &'static str> {
+    pub fn move_player(&mut self, direction: char) -> Result<f64, &'static str> {
 
         match direction {
 
             'u' => {
 
-                return Self::move_player_dir(self, 0, -1, num_of_rounds);
+                return Self::move_player_dir(self, 0, -1);
 
             },
             'd' => {
 
-                return Self::move_player_dir(self, 0, 1, num_of_rounds);
+                return Self::move_player_dir(self, 0, 1);
 
             },
             'l' => {
 
-                return Self::move_player_dir(self, -1, 0, num_of_rounds);
+                return Self::move_player_dir(self, -1, 0);
 
             },
             'r' => {
 
-                return Self::move_player_dir(self, 1, 0, num_of_rounds);
+                return Self::move_player_dir(self, 1, 0);
 
             },
             _other => Err::<f64, &'static str>("Invalid direction")
