@@ -77,6 +77,8 @@ impl Maze {
 
         }
 
+        self.board[self.y_size / 2][self.x_size / 2] = Tile::Wall;
+
     }
 
     fn move_goal(&mut self) {

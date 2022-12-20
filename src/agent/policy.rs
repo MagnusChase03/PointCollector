@@ -110,7 +110,6 @@ impl Policy {
 
                 for weight in 0..self.weights[layer][node].len() {
 
-                    //file.write_all(format!("{}\n", self.weights[layer][node][weight].to_string()).as_bytes()).unwrap();
                     self.weights[layer][node][weight] = weights[num].parse::<f64>().unwrap();
                     num += 1;
 
@@ -161,33 +160,33 @@ impl Policy {
 
                 for node in 0..self.inputs.len() {
 
-                    total += self.inputs[node] * self.weights[0][node][to] + self.biases[0][to];
+                    total += self.inputs[node] * self.weights[0][node][to];
 
                 }
 
-                return Ok(total);
+                return Ok(total + self.biases[0][to]);
 
             },
             1 => {
 
                 for node in 0..self.hidden[0].len() {
 
-                    total += self.hidden[0][node] * self.weights[1][node][to] + self.biases[1][to];
+                    total += self.hidden[0][node] * self.weights[1][node][to];
 
                 }
 
-                return Ok(total);
+                return Ok(total + self.biases[1][to]);
 
             },
             2 => {
 
                 for node in 0..self.hidden[1].len() {
 
-                    total += self.hidden[1][node] * self.weights[2][node][to] + self.biases[2][to];
+                    total += self.hidden[1][node] * self.weights[2][node][to];
 
                 }
 
-                return Ok(total);
+                return Ok(total + self.biases[2][to]);
 
             },
             _ => {
@@ -200,7 +199,7 @@ impl Policy {
 
     }
 
-    pub fn forward(&mut self, inputs: &Vec<f64>) {
+    pub fn forward(&mut self, inputs: &Vec<f64>) -> Result<(), &'static str> {
 
         for num in 0..inputs.len() {
 
@@ -210,43 +209,48 @@ impl Policy {
 
         for node in 0..self.hidden[0].len() {
 
-            // let mut total: f64 = 0.0;
-            // for num in 0..self.inputs.len() {
+            match Self::forward_single(self, 0, node) {
 
-            //     total += self.inputs[num] * self.weights[0][num][node] + self.biases[0][node];
+                Ok(total) => {
 
-            // }
+                    self.hidden[0][node] = Self::sigmoid(total);
 
-            self.hidden[0][node] = Self::sigmoid(Self::forward_single(self, 0, node).unwrap());
+                },
+                Err(e) => return Err(e),
+
+            };
 
         }
 
         for node in 0..self.hidden[1].len() {
 
-            // let mut total: f64 = 0.0;
-            // for node in 0..self.hidden[0].len() {
+            match Self::forward_single(self, 1, node) {
 
-            //     total += self.hidden[0][node] * self.weights[1][node][node2] + self.biases[1][node2];
+                Ok(total) => {
 
-            // }
+                    self.hidden[1][node] = Self::sigmoid(total);
 
-            self.hidden[1][node] = Self::sigmoid(Self::forward_single(self, 1, node).unwrap());
+                },
+                Err(e) => return Err(e),
+
+            };
 
         }
 
         let mut output_total: f64 = 0.0;
         for output in 0..self.outputs.len() {
 
-            // let mut total: f64 = 0.0;
-            // for node in 0..self.hidden[1].len() {
+            match Self::forward_single(self, 2, output) {
 
-            //     total += self.hidden[1][node] * self.weights[2][node][output] + self.biases[2][output];
+                Ok(total) => {
 
-            // }
+                    self.outputs[output] = total;
+                    output_total += total;
 
-            let total: f64 = Self::forward_single(self, 2, output).unwrap();
-            self.outputs[output] = total;
-            output_total += total;
+                },
+                Err(e) => return Err(e),
+
+            };
 
         }
 
@@ -256,6 +260,8 @@ impl Policy {
             self.outputs[output] = Self::liklyhood(self.outputs[output], output_total);
 
         }
+
+        Ok(())
 
     }
 
@@ -273,7 +279,7 @@ impl Policy {
 
     }
 
-    pub fn backpropagate(&mut self, inputs: &Vec<f64>, reward: f64, action: char, chance: f64) -> Result<(), &'static str> {
+    pub fn backpropagate(&mut self, inputs: &Vec<f64>, reward: f64, action: char) -> Result<(), &'static str> {
 
         if reward == 0.0 {
 
@@ -295,16 +301,16 @@ impl Policy {
 
         }
 
-        // self.forward(inputs);
+        self.forward(inputs);
 
         let mut error: f64 = 0.0;
         if reward > 0.0 {
 
-            error = chance - 1.0;
+            error = self.outputs[output_node] - 1.0;
 
         } else {
 
-            error = chance;
+            error = self.outputs[output_node];
 
         }
 
@@ -317,65 +323,55 @@ impl Policy {
         for node in 0..self.hidden[1].len() {
 
             self.weights[2][node][output_node] -= derivatives * self.hidden[1][node];
-            // println!("Change by {} with {}, {}. and {}", derivatives * self.hidden[1][node], derivatives, self.hidden[1][node], reward);
 
         }
-
-        // for node in 0..self.hidden[1].len() {
-
-        //     let node_error = derivatives * self.weights[2][node][output_node] 
-        //         * Self::sigmoid_d(Self::forward_single(self, 1, node).unwrap());
-
-        //     self.biases[1][node] -= node_error;
-        //     for prev_node in 0..self.hidden[0].len() {
-
-        //         self.weights[1][prev_node][node] -= node_error * self.hidden[0][prev_node];
-
-        //     }
-
-        // }
 
         let mut hidden1_error: Vec<f64> = vec![0.0; self.hidden[1].len()];
         for node in 0..self.hidden[1].len() {
 
-            hidden1_error[node] = derivatives * self.weights[2][node][output_node] 
-                * Self::sigmoid_d(Self::forward_single(self, 1, node).unwrap());
+            match Self::forward_single(self, 1, node) {
 
-            self.biases[1][node] -= hidden1_error[node];
-            for prev_node in 0..self.hidden[0].len() {
+                Ok(total) => {
 
-                self.weights[1][prev_node][node] -= hidden1_error[node] * self.hidden[0][prev_node];
+                    hidden1_error[node] = derivatives * self.weights[2][node][output_node] 
+                        * Self::sigmoid_d(total);
 
-            }
+                    self.biases[1][node] -= hidden1_error[node];
+                    for prev_node in 0..self.hidden[0].len() {
+
+                        self.weights[1][prev_node][node] -= hidden1_error[node] * self.hidden[0][prev_node];
+
+                    }
+
+                },
+                Err(e) => return Err(e),
+
+            };
 
         }
 
-        // for node in 0..self.hidden[0].len() {
-
-        //     for node2 in 0..self.hidden[1].len() {
-
-        //         self.weights[1][node][node2] -= hidden1_error[node] * self.hidden[0][node];
-
-        //     }
-
-        // }
-
         for node in 0..self.hidden[0].len() {
-
-            // hidden0_error[node] = derivatives * self.weights[2][node][output_node] 
-            //     * Self::sigmoid_d(Self::forward_single(self, 1, node).unwrap());
 
             for next_node in 0..self.hidden[1].len() {
 
-                let node_error: f64 = hidden1_error[next_node] * self.weights[1][node][next_node]
-                    * Self::sigmoid_d(Self::forward_single(self, 0, node).unwrap());
+                match Self::forward_single(self, 0, node) {
 
-                self.biases[0][node] -= node_error;
-                for inp in 0..self.inputs.len() {
+                    Ok(total) => {
 
-                    self.weights[0][inp][node] -= node_error * self.inputs[inp];
+                        let node_error: f64 = hidden1_error[next_node] * self.weights[1][node][next_node]
+                            * Self::sigmoid_d(total);
 
-                }
+                        self.biases[0][node] -= node_error;
+                        for inp in 0..self.inputs.len() {
+
+                            self.weights[0][inp][node] -= node_error * self.inputs[inp];
+
+                        }
+
+                    },
+                    Err(e) => return Err(e),
+
+                };
 
             }
 
@@ -383,7 +379,6 @@ impl Policy {
 
         Ok(())
         
-
     }
 
 }

@@ -8,7 +8,7 @@ use env::maze;
 use std::thread;
 use rand::Rng;
 
-fn do_move(policy: &mut p::Policy, replay: &mut memory::Memory, game: &mut maze::Maze, direction: char, chance: f64) -> Result<(), &'static str> {
+fn do_move(policy: &mut p::Policy, replay: &mut memory::Memory, game: &mut maze::Maze, direction: char) -> Result<(), &'static str> {
 
     let start_state: Vec<f64> = vec![game.player_x as f64, game.player_y as f64, 
                                     game.goal_x as f64, game.goal_y as f64];
@@ -19,7 +19,6 @@ fn do_move(policy: &mut p::Policy, replay: &mut memory::Memory, game: &mut maze:
 
             replay.add(start_state,
                 direction,
-                chance,
                 reward);
 
             return Ok(());
@@ -62,10 +61,10 @@ fn make_move(policy: &mut p::Policy, replay: &mut memory::Memory, game: &mut maz
 
             match output {
 
-                0 => return do_move(policy, replay, game, 'u', policy.outputs[0]),
-                1 => return do_move(policy, replay, game, 'd', policy.outputs[1]),
-                2 => return do_move(policy, replay, game, 'l', policy.outputs[2]),
-                3 => return do_move(policy, replay, game, 'r', policy.outputs[3]),
+                0 => return do_move(policy, replay, game, 'u'),
+                1 => return do_move(policy, replay, game, 'd'),
+                2 => return do_move(policy, replay, game, 'l'),
+                3 => return do_move(policy, replay, game, 'r'),
                 _other => Err::<(), &str>("Incorrect number of outputs.")
 
             };
@@ -78,7 +77,7 @@ fn make_move(policy: &mut p::Policy, replay: &mut memory::Memory, game: &mut maz
     
 }
 
-fn train(policy: &mut p::Policy, replay: &agent::memory::Memory) {
+fn train(policy: &mut p::Policy, replay: &agent::memory::Memory) -> Result<(), &'static str> {
 
     let mut value: f64 = 0.0;
     for mem in 0..replay.start_states.len() {
@@ -94,9 +93,16 @@ fn train(policy: &mut p::Policy, replay: &agent::memory::Memory) {
 
         }
 
-        policy.backpropagate(&replay.start_states[index], value, replay.actions[index], replay.chances[index]);
+        match policy.backpropagate(&replay.start_states[index], value, replay.actions[index]) {
+
+            Ok(()) => {},
+            Err(e) => return Err(e),
+
+        };
 
     }
+
+    Ok(())
 
 }
 
@@ -105,64 +111,66 @@ fn main() {
     let mut rng = rand::thread_rng();
 
     let mut policy = p::Policy::new(4, 4, 6);
-    // policy.randomize_weights();
+    policy.randomize_weights();
     policy.learning_rate = 0.001;
-    policy.load_weights("BEST2.dat");
+    // policy.load_weights("BEST2.dat");
 
     let mut explore_rate: f64 = 1.0;
-
-    // let test_inputs = vec![1.0, 2.0, 3.0, 4.0];
-    // policy.forward(&test_inputs);
-
-    // for i in 0..1000 {
-
-    //     policy.backpropagate(&test_inputs, 10.0, 'u');
-
-    // }
 
     
     let games_to_play: i64 = 1000;
     let num_of_rounds: i64 = 120;
-    // let mut replays = vec![memory::Memory::new(); 100];
-    // for game_num in 0..games_to_play {
+    let mut replays = vec![memory::Memory::new(); 100];
+    for game_num in 0..games_to_play {
         
-    //     println!("Game {}", game_num);
-    //     let mut game = maze::Maze::new(10, 10);
-    //     game.add_walls();
-    //     // game.print();
+        println!("Game {}", game_num);
+        let mut game = maze::Maze::new(10, 10);
+        game.add_walls();
 
-
-    //     for _round in 0..num_of_rounds {
+        for _round in 0..num_of_rounds {
         
 
-    //         let num: f64 = rng.gen();
-    //         if num < 0.1 {
+            let num: f64 = rng.gen();
+            if num < 0.1 {
 
-    //             make_move(&mut policy, &mut replays[(game_num % 100) as usize], &mut game, true);
+                match make_move(&mut policy, &mut replays[(game_num % 100) as usize], &mut game, true) {
 
-    //         } else {
+                    Ok(()) => {},
+                    Err(e) => println!("{}", e), 
 
-    //             make_move(&mut policy, &mut replays[(game_num % 100) as usize], &mut game, false);
+                };
 
-    //         }
+            } else {
 
-    //         // game.print();
+                match make_move(&mut policy, &mut replays[(game_num % 100) as usize], &mut game, false) {
 
-    //     }
+                    Ok(()) => {},
+                    Err(e) => println!("{}", e),
+
+                };
+
+            }
+
+        }
 
         
-    //     if game_num % 100 == 0 {
+        if game_num % 100 == 0 {
             
-    //         for replay in 0..replays.len() {
+            for replay in 0..replays.len() {
 
-    //             train(&mut policy, &replays[replay]);
-    //             replays[replay] = memory::Memory::new();
+                match train(&mut policy, &replays[replay]) {
 
-    //         }
-    //         explore_rate -= 0.4 / (games_to_play as f64 / 100.0);
-    //     }
+                    Ok(()) => {},
+                    Err(e) => println!("{}", e),
 
-    // }
+                };
+                replays[replay] = memory::Memory::new();
+
+            }
+            explore_rate -= 0.4 / (games_to_play as f64 / 100.0);
+        }
+
+    }
 
     let mut game = maze::Maze::new(10, 10);
     game.add_walls();
@@ -173,15 +181,17 @@ fn main() {
     for _round in 0..num_of_rounds {
     
         thread::sleep_ms(10);
-        make_move(&mut policy, &mut replay, &mut game, false);
-        // println!("{:?}", policy.outputs);
+        match make_move(&mut policy, &mut replay, &mut game, false) {
+
+            Ok(()) => {},
+            Err(e) => println!("{}", e),
+
+        };
 
         game.print();
 
     }
 
     policy.save_weights();
-
-    // println!("{:?}",policy);
 
 }
