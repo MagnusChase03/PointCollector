@@ -45,6 +45,60 @@ impl Policy {
 
     }
 
+    pub fn clone(&self) -> Policy {
+
+        let mut copy_policy = Policy {
+
+            inputs: vec![0.0; self.inputs.len()],
+
+            hidden: vec![vec![0.0; self.hidden[0].len()]; 2],
+
+            outputs: vec![0.0; self.outputs.len()],
+
+            weights: vec![vec![vec![0.0; self.hidden[0].len()]; self.inputs.len()], 
+                vec![vec![0.0; self.hidden[0].len()]; self.hidden[0].len()], 
+                vec![vec![0.0; self.outputs.len()]; self.hidden[0].len()]],
+
+            biases: vec![vec![0.0; self.hidden[0].len()], 
+                vec![0.0; self.hidden[0].len()], 
+                vec![0.0; self.outputs.len()]],
+
+            learning_rate: 1.0,
+
+            output_total: 0.0
+
+        };
+
+        for layer in 0..self.biases.len() {
+
+            for node in 0..self.biases[layer].len() {
+
+                copy_policy.biases[layer][node] = self.biases[layer][node];
+
+            }
+
+        }
+
+        for layer in 0..self.weights.len() {
+
+            for node in 0..self.weights[layer].len() {
+
+                for weight in 0..self.weights[layer][node].len() {
+
+                    copy_policy.weights[layer][node][weight] = self.weights[layer][node][weight];
+
+                }
+
+            }
+
+        }
+
+        copy_policy.learning_rate = self.learning_rate;
+
+        copy_policy
+
+    }
+
     pub fn randomize_weights(&mut self) {
 
         let mut rng = rand::thread_rng();
@@ -279,7 +333,7 @@ impl Policy {
 
     }
 
-    pub fn backpropagate(&mut self, inputs: &Vec<f64>, reward: f64, action: char) -> Result<(), &'static str> {
+    pub fn backpropagate(&mut self, inputs: &Vec<f64>, reward: f64, action: char, copy_policy: &mut Policy) -> Result<(), &'static str> {
 
         if reward == 0.0 {
 
@@ -301,45 +355,45 @@ impl Policy {
 
         }
 
-        self.forward(inputs);
+        copy_policy.forward(inputs);
 
         let mut error: f64 = 0.0;
         if reward > 0.0 {
 
-            error = self.outputs[output_node] - 1.0;
+            error = copy_policy.outputs[output_node] - 1.0;
 
         } else {
 
-            error = self.outputs[output_node];
+            error = copy_policy.outputs[output_node];
 
         }
 
         error = error * reward.abs();
 
-        let derivatives: f64 = (2.0 * error * self.learning_rate) 
-                / self.output_total;
+        let derivatives: f64 = (2.0 * error * copy_policy.learning_rate) 
+                / copy_policy.output_total;
 
         self.biases[2][output_node] -= derivatives;
         for node in 0..self.hidden[1].len() {
 
-            self.weights[2][node][output_node] -= derivatives * self.hidden[1][node];
+            self.weights[2][node][output_node] -= derivatives * copy_policy.hidden[1][node];
 
         }
 
         let mut hidden1_error: Vec<f64> = vec![0.0; self.hidden[1].len()];
         for node in 0..self.hidden[1].len() {
 
-            match Self::forward_single(self, 1, node) {
+            match Self::forward_single(copy_policy, 1, node) {
 
                 Ok(total) => {
 
-                    hidden1_error[node] = derivatives * self.weights[2][node][output_node] 
+                    hidden1_error[node] = derivatives * copy_policy.weights[2][node][output_node] 
                         * Self::sigmoid_d(total);
 
                     self.biases[1][node] -= hidden1_error[node];
                     for prev_node in 0..self.hidden[0].len() {
 
-                        self.weights[1][prev_node][node] -= hidden1_error[node] * self.hidden[0][prev_node];
+                        self.weights[1][prev_node][node] -= hidden1_error[node] * copy_policy.hidden[0][prev_node];
 
                     }
 
@@ -354,17 +408,17 @@ impl Policy {
 
             for next_node in 0..self.hidden[1].len() {
 
-                match Self::forward_single(self, 0, node) {
+                match Self::forward_single(copy_policy, 0, node) {
 
                     Ok(total) => {
 
-                        let node_error: f64 = hidden1_error[next_node] * self.weights[1][node][next_node]
+                        let node_error: f64 = hidden1_error[next_node] * copy_policy.weights[1][node][next_node]
                             * Self::sigmoid_d(total);
 
                         self.biases[0][node] -= node_error;
                         for inp in 0..self.inputs.len() {
 
-                            self.weights[0][inp][node] -= node_error * self.inputs[inp];
+                            self.weights[0][inp][node] -= node_error * copy_policy.inputs[inp];
 
                         }
 

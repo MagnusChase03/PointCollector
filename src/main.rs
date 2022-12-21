@@ -79,6 +79,8 @@ fn make_move(policy: &mut p::Policy, replay: &mut memory::Memory, game: &mut maz
 
 fn train(policy: &mut p::Policy, replay: &agent::memory::Memory) -> Result<(), &'static str> {
 
+    let mut copy_policy = policy.clone();
+
     let mut value: f64 = 0.0;
     for mem in 0..replay.start_states.len() {
 
@@ -87,7 +89,7 @@ fn train(policy: &mut p::Policy, replay: &agent::memory::Memory) -> Result<(), &
 
             if value > 0.0 {
 
-                value = replay.rewards[index] + (0.75 * value);
+                value = replay.rewards[index] + (0.5 * value);
 
             } else {
 
@@ -97,11 +99,11 @@ fn train(policy: &mut p::Policy, replay: &agent::memory::Memory) -> Result<(), &
 
         } else {
 
-            value = replay.rewards[index] + (0.75 * value);
+            value = replay.rewards[index] + (0.5 * value);
 
         }
 
-        match policy.backpropagate(&replay.start_states[index], value, replay.actions[index]) {
+        match policy.backpropagate(&replay.start_states[index], value, replay.actions[index], &mut copy_policy) {
 
             Ok(()) => {},
             Err(e) => return Err(e),
@@ -121,11 +123,11 @@ fn workout(policy: &mut p::Policy, sets: usize, start: usize, e_rate: f64) {
     for set in start..(start + sets) {
 
         let mut explore_rate: f64 = e_rate;
-        if set - start == 2 {
+        if set - start == (set - start) / 5 {
 
             explore_rate = e_rate - 0.2;
 
-        } else if set - start >= 4 {
+        } else if set - start >= 2 * ((set - start) / 5) {
 
             explore_rate = e_rate - 0.4;
 
@@ -177,9 +179,10 @@ fn workout(policy: &mut p::Policy, sets: usize, start: usize, e_rate: f64) {
                         Err(e) => println!("{}", e),
 
                     };
+                    
                     replays[replay] = memory::Memory::new();
-
                 }
+
                 // explore_rate -= 0.6 / (games_to_play as f64 / 100.0);
                 explore_rate -= 0.2 / (games_to_play as f64 / 100.0);
             }
@@ -220,10 +223,10 @@ fn main() {
 
     let mut policy = p::Policy::new(4, 4, 6);
     // policy.randomize_weights();
-    policy.load_weights("sets/107.dat");
-    policy.learning_rate = 0.0000001;
+    policy.load_weights("sets/14.dat");
+    policy.learning_rate = 0.0001;
 
-    // workout(&mut policy, 10, 98, 0.7);
-    play(&mut policy, 360);
+    workout(&mut policy, 10, 5, 0.6);
+    // play(&mut policy, 360);
 
 }
