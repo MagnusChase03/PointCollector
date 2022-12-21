@@ -103,7 +103,7 @@ impl Maze {
 
     fn move_player_dir(&mut self, x: i8, y: i8) -> Result<f64, &'static str> {
 
-        let mut reward: f64 = 0.0;
+        let mut reward: f64 = -1.0;
         if x < 0 || y < 0 {
 
             if self.board[self.player_y - (y.abs() as usize)][self.player_x - (x.abs() as usize)] == Tile::Empty 
@@ -125,7 +125,7 @@ impl Maze {
                 return Ok(reward);
             } 
 
-            return Ok(-1.0);
+            return Ok(reward * 2.0);
 
         } else if x > 0 || y > 0 {
 
@@ -149,7 +149,7 @@ impl Maze {
                 return Ok(reward);
             } 
 
-            return Ok(-1.0);
+            return Ok(reward * 2.0);
 
         }
 

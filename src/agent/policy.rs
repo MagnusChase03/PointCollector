@@ -65,9 +65,9 @@ impl Policy {
 
     }
     
-    pub fn save_weights(&self) {
+    pub fn save_weights(&self, filepath: &str) {
 
-        let mut file = std::fs::File::create("data.dat").unwrap();
+        let mut file = std::fs::File::create(filepath).unwrap();
         for layer in 0..self.weights.len() {
 
             for node in 0..self.weights[layer].len() {

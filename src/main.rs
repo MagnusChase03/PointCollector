@@ -106,82 +106,96 @@ fn train(policy: &mut p::Policy, replay: &agent::memory::Memory) -> Result<(), &
 
 }
 
-fn main() {
-
+fn workout(policy: &mut p::Policy, sets: usize) {
+    
     let mut rng = rand::thread_rng();
 
-    let mut policy = p::Policy::new(4, 4, 6);
-    policy.randomize_weights();
-    policy.learning_rate = 0.001;
-    // policy.load_weights("BEST2.dat");
+    for set in 0..sets {
 
-    let mut explore_rate: f64 = 1.0;
+        let mut explore_rate: f64 = 0.8;
+        if set == 2 {
 
-    
-    let games_to_play: i64 = 1000;
-    let num_of_rounds: i64 = 120;
-    let mut replays = vec![memory::Memory::new(); 100];
-    for game_num in 0..games_to_play {
-        
-        println!("Game {}", game_num);
-        let mut game = maze::Maze::new(10, 10);
-        game.add_walls();
+            explore_rate = 0.6;
 
-        for _round in 0..num_of_rounds {
-        
+        } else if set >= 4 {
 
-            let num: f64 = rng.gen();
-            if num < 0.1 {
-
-                match make_move(&mut policy, &mut replays[(game_num % 100) as usize], &mut game, true) {
-
-                    Ok(()) => {},
-                    Err(e) => println!("{}", e), 
-
-                };
-
-            } else {
-
-                match make_move(&mut policy, &mut replays[(game_num % 100) as usize], &mut game, false) {
-
-                    Ok(()) => {},
-                    Err(e) => println!("{}", e),
-
-                };
-
-            }
+            explore_rate = 0.4;
 
         }
-
         
-        if game_num % 100 == 0 {
+        let games_to_play: i64 = 5000;
+        let num_of_rounds: i64 = 120;
+        let mut replays = vec![memory::Memory::new(); 100];
+        for game_num in 0..games_to_play {
             
-            for replay in 0..replays.len() {
+            println!("Game {}", game_num);
+            let mut game = maze::Maze::new(10, 10);
+            game.add_walls();
 
-                match train(&mut policy, &replays[replay]) {
+            for _round in 0..num_of_rounds {
+            
 
-                    Ok(()) => {},
-                    Err(e) => println!("{}", e),
+                let num: f64 = rng.gen();
+                if num < 0.1 {
 
-                };
-                replays[replay] = memory::Memory::new();
+                    match make_move(policy, &mut replays[(game_num % 100) as usize], &mut game, true) {
+
+                        Ok(()) => {},
+                        Err(e) => println!("{}", e), 
+
+                    };
+
+                } else {
+
+                    match make_move(policy, &mut replays[(game_num % 100) as usize], &mut game, false) {
+
+                        Ok(()) => {},
+                        Err(e) => println!("{}", e),
+
+                    };
+
+                }
 
             }
-            explore_rate -= 0.4 / (games_to_play as f64 / 100.0);
+
+            
+            if game_num % 100 == 0 {
+                
+                for replay in 0..replays.len() {
+
+                    match train(policy, &replays[replay]) {
+
+                        Ok(()) => {},
+                        Err(e) => println!("{}", e),
+
+                    };
+                    replays[replay] = memory::Memory::new();
+
+                }
+                // explore_rate -= 0.6 / (games_to_play as f64 / 100.0);
+                explore_rate -= 0.2 / (games_to_play as f64 / 100.0);
+            }
+
         }
+
+        policy.save_weights(&format!("sets/{}.dat", set));
 
     }
 
+}
+
+fn play(policy: &mut p::Policy, num_of_rounds: usize) {
+
+    let mut replays = vec![memory::Memory::new(); 1];   
     let mut game = maze::Maze::new(10, 10);
     game.add_walls();
     game.print();
 
-    let mut replay = memory::Memory::new();
-
-    for _round in 0..num_of_rounds {
     
-        thread::sleep_ms(10);
-        match make_move(&mut policy, &mut replay, &mut game, false) {
+    for _round in 0..num_of_rounds {
+        
+        thread::sleep_ms(20);
+        match make_move(policy, &mut replays[0], &mut game, false) {
 
             Ok(()) => {},
             Err(e) => println!("{}", e),
@@ -192,6 +206,16 @@ fn main() {
 
     }
 
-    policy.save_weights();
+}
+
+fn main() {
+
+    let mut policy = p::Policy::new(4, 4, 6);
+    policy.randomize_weights();
+    // policy.load_weights("sets/6.dat");
+    policy.learning_rate = 0.00000001;
+
+    workout(&mut policy, 10);
+    play(&mut policy, 120);
 
 }
