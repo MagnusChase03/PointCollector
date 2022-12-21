@@ -223,10 +223,10 @@ fn main() {
 
     let mut policy = p::Policy::new(4, 4, 6);
     // policy.randomize_weights();
-    policy.load_weights("sets/14.dat");
+    policy.load_weights("sets/24.dat");
     policy.learning_rate = 0.0001;
 
-    workout(&mut policy, 10, 5, 0.6);
-    // play(&mut policy, 360);
+    // workout(&mut policy, 10, 15, 0.7);
+    play(&mut policy, 360);
 
 }
