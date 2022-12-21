@@ -103,7 +103,6 @@ impl Maze {
 
     fn move_player_dir(&mut self, x: i8, y: i8) -> Result<f64, &'static str> {
 
-        let mut reward: f64 = -1.0;
         if x < 0 || y < 0 {
 
             if self.board[self.player_y - (y.abs() as usize)][self.player_x - (x.abs() as usize)] == Tile::Empty 
@@ -113,19 +112,37 @@ impl Maze {
 
                     Self::move_goal(self);
                     println!("Goal!");
-                    reward = 10.0;
+
+                    self.board[self.player_y][self.player_x] = Tile::Empty;
+                    self.player_y -= y.abs() as usize;
+                    self.player_x -= x.abs() as usize;
+                    self.board[self.player_y][self.player_x] = Tile::Player;
+
+                    return Ok(3.0);
 
                 }
+
+                let distance: f64 = ((self.player_x as f64 - self.goal_x as f64).powi(2) + (self.player_y as f64 - self.goal_y as f64).powi(2)).sqrt();
 
                 self.board[self.player_y][self.player_x] = Tile::Empty;
                 self.player_y -= y.abs() as usize;
                 self.player_x -= x.abs() as usize;
                 self.board[self.player_y][self.player_x] = Tile::Player;
 
-                return Ok(reward);
+                let new_distance: f64 = ((self.player_x as f64 - self.goal_x as f64).powi(2) + (self.player_y as f64 - self.goal_y as f64).powi(2)).sqrt();
+                if new_distance - distance > 0.0 {
+
+                    return Ok(-2.0);
+
+                } else {
+
+                    return Ok(1.0);
+
+                }
+
             } 
 
-            return Ok(reward * 2.0);
+            return Ok(-1.0);
 
         } else if x > 0 || y > 0 {
 
@@ -137,19 +154,37 @@ impl Maze {
 
                     Self::move_goal(self);
                     println!("Goal!");
-                    reward = 10.0;
+                    
+                    self.board[self.player_y][self.player_x] = Tile::Empty;
+                    self.player_y += y as usize;
+                    self.player_x += x as usize;
+                    self.board[self.player_y][self.player_x] = Tile::Player;
+
+                    return Ok(3.0);
 
                 }
+
+                let distance: f64 = ((self.player_x as f64 - self.goal_x as f64).powi(2) + (self.player_y as f64 - self.goal_y as f64).powi(2)).sqrt();
 
                 self.board[self.player_y][self.player_x] = Tile::Empty;
                 self.player_y += y as usize;
                 self.player_x += x as usize;
                 self.board[self.player_y][self.player_x] = Tile::Player;
 
-                return Ok(reward);
+                let new_distance: f64 = ((self.player_x as f64 - self.goal_x as f64).powi(2) + (self.player_y as f64 - self.goal_y as f64).powi(2)).sqrt();
+                if new_distance - distance > 0.0 {
+
+                    return Ok(-2.0);
+
+                } else {
+
+                    return Ok(1.0);
+
+                }
+
             } 
 
-            return Ok(reward * 2.0);
+            return Ok(-1.0);
 
         }
 
